@@ -1,7 +1,11 @@
 package muskanclasses.class12th.modelpaper.science;
 
 
+import static android.content.Context.MODE_PRIVATE;
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -14,20 +18,35 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 
 import android.webkit.JavascriptInterface;
+import android.widget.Toast;
 
 public class web_function {
 
     private AppCompatActivity activity;
+    private String name;
+    private String email;
 
     // Constructor to pass the MainActivity context
     public web_function(AppCompatActivity activity) {
         this.activity = activity;
+
+        SharedPreferences sharedPreferences = activity.getSharedPreferences("MyAppPreferences", MODE_PRIVATE);
+
+         name = sharedPreferences.getString("name", "null");
+         email = sharedPreferences.getString("email", "null");
+        if (sharedPreferences.getString("email", "null").equals("null")) {
+            Intent intent = new Intent(activity, LoginnActivity.class);
+            activity.startActivity(intent);
+        }
     }
+
+
 
     // Open Second Activity with URL
     @JavascriptInterface
     public void openSecondActivity(String url) {
         Intent intent = new Intent(activity, ListActivity.class);
+
         intent.putExtra("url", url);  // Pass the URL to SecondActivity
         activity.startActivity(intent);
     }
@@ -35,7 +54,8 @@ public class web_function {
     // Open Chrome Custom Tab with URL
     @JavascriptInterface
     public void openChromeCustomTab(String url) {
-        Drawable drawable = ContextCompat.getDrawable(activity, R.drawable.arrow_back_24px);
+        Drawable drawable = ContextCompat.getDrawable(activity, R.drawable.baseline_arrow_back_24);
+        String fullUrl = url + "?name=" + name + "&email=" + email;
         if (drawable != null) {
             drawable = DrawableCompat.wrap(drawable).mutate();
 
@@ -58,10 +78,22 @@ public class web_function {
 
             CustomTabsIntent customTabsIntent = builder.build();
 
-            customTabsIntent.launchUrl(activity, Uri.parse(url));
+            customTabsIntent.launchUrl(activity, Uri.parse(fullUrl));
 
         }
     }
+  @JavascriptInterface
+    public void openChromeCustomTabAds(String url) {
+      Toast.makeText(activity, "OpenTabAds", Toast.LENGTH_SHORT).show();
+
+
+
+      AdsManager.showInterstitialAdWithCallback(activity, () -> {
+          openChromeCustomTab(url);  // Will open only after ad is closed
+      });
+
+
+   }
 
     // Show Share Dialog
     @JavascriptInterface
@@ -117,4 +149,8 @@ public class web_function {
         Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
         activity.startActivity(goToMarket);
     }
+
+
+
+
 }
